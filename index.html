@@ -3,196 +3,289 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kuznetsov Finance Command Center</title>
+<title>YK Finance OS</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0a0a0f;
-  --surface: #111118;
-  --surface2: #1a1a24;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.12);
-  --text: #f0f0f5;
-  --muted: #6b6b7e;
-  --accent: #7c6af7;
-  --accent2: #a855f7;
-  --green: #22d3a5;
-  --red: #f05252;
-  --amber: #f59e0b;
-  --blue: #60a5fa;
-}
-* { margin:0; padding:0; box-sizing:border-box; }
-body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; min-height:100vh; }
+*{margin:0;padding:0;box-sizing:border-box;}
 
-/* HEADER */
-.header { padding:2rem 2rem 0; display:flex; justify-content:space-between; align-items:center; }
-.logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.1rem; letter-spacing:0.05em; }
-.logo span { color:var(--accent); }
-.date-badge { font-size:0.7rem; color:var(--muted); border:1px solid var(--border2); padding:0.4rem 0.8rem; border-radius:100px; }
+/* ── LIGHT THEME ── */
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #f0efe9;
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.12);
+  --text: #0f0f12;
+  --muted: #8a8a96;
+  --accent: #2d2aff;
+  --accent2: #6c63ff;
+  --green: #00a878;
+  --red: #e03131;
+  --amber: #e67700;
+  --blue: #1971c2;
+}
+
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden;}
+
+/* ══════════════════════════════════════
+   PIN SCREEN
+══════════════════════════════════════ */
+#pinScreen {
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  animation:fadeIn 0.6s ease;
+}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.04)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@keyframes dotPop{0%{transform:scale(0.6)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+.pin-logo {
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;
+  letter-spacing:0.02em;margin-bottom:2.5rem;
+  animation:float 4s ease-in-out infinite;
+}
+.pin-logo .dot{
+  display:inline-block;width:8px;height:8px;border-radius:50%;
+  background:var(--accent);margin:0 6px 2px;vertical-align:middle;
+}
+
+.pin-card {
+  background:var(--surface);border-radius:24px;
+  padding:2.5rem 2rem;width:340px;
+  box-shadow:0 4px 40px rgba(0,0,0,0.08),0 1px 3px rgba(0,0,0,0.05);
+  border:1px solid var(--border);
+}
+
+.pin-label{font-size:0.7rem;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;text-align:center;margin-bottom:1.5rem;}
+
+.pin-dots{display:flex;justify-content:center;gap:14px;margin-bottom:2rem;}
+.pin-dot{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--border2);background:transparent;
+  transition:all 0.2s;
+}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);animation:dotPop 0.25s ease;}
+
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pin-btn{
+  height:56px;border-radius:14px;border:1px solid var(--border);
+  background:var(--surface2);cursor:pointer;
+  font-family:'Syne',sans-serif;font-weight:600;font-size:1.1rem;
+  color:var(--text);transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.pin-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent);transform:scale(0.97);}
+.pin-btn:active{transform:scale(0.93);}
+.pin-btn.del{font-size:0.85rem;color:var(--muted);}
+.pin-btn.zero{grid-column:2;}
+
+.pin-error{
+  text-align:center;font-size:0.7rem;color:var(--red);
+  margin-top:1rem;opacity:0;transition:opacity 0.2s;
+  letter-spacing:0.05em;
+}
+.pin-error.show{opacity:1;}
+
+/* ══════════════════════════════════════
+   MAIN DASHBOARD
+══════════════════════════════════════ */
+#app{display:none;opacity:0;transition:opacity 0.5s;}
+#app.visible{display:block;opacity:1;}
+
+.header{
+  padding:1.5rem 2rem;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border);background:var(--surface);
+  position:sticky;top:0;z-index:100;
+}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;letter-spacing:0.03em;}
+.logo .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin:0 5px 1px;vertical-align:middle;}
+.header-right{display:flex;align-items:center;gap:1rem;}
+.date-badge{font-size:0.65rem;color:var(--muted);border:1px solid var(--border2);padding:0.35rem 0.8rem;border-radius:100px;}
+.lock-btn{font-size:0.65rem;color:var(--muted);cursor:pointer;padding:0.35rem 0.7rem;border:1px solid var(--border2);border-radius:100px;transition:all 0.2s;}
+.lock-btn:hover{background:var(--red);color:#fff;border-color:var(--red);}
 
 /* TABS */
-.tabs { display:flex; gap:0; padding:1.5rem 2rem 0; border-bottom:1px solid var(--border); margin-bottom:0; }
-.tab { padding:0.75rem 1.5rem; font-family:'DM Mono',monospace; font-size:0.75rem; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:all 0.2s; letter-spacing:0.05em; }
-.tab.active { color:var(--text); border-bottom-color:var(--accent); }
-.tab:hover:not(.active) { color:var(--text); }
+.tabs{display:flex;padding:0 2rem;background:var(--surface);border-bottom:1px solid var(--border);}
+.tab{padding:0.85rem 1.25rem;font-family:'DM Mono',monospace;font-size:0.72rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;letter-spacing:0.06em;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 
 /* PANELS */
-.panel { display:none; padding:2rem; }
-.panel.active { display:block; }
+.panel{display:none;padding:2rem;animation:slideUp 0.4s ease;}
+.panel.active{display:block;}
 
-/* GRID LAYOUTS */
-.metrics-row { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem; }
-.two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
-.three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.5rem; margin-bottom:1.5rem; }
+/* GRIDS */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;}
 
 /* CARDS */
-.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.25rem; }
-.card-title { font-size:0.65rem; color:var(--muted); letter-spacing:0.1em; text-transform:uppercase; margin-bottom:0.75rem; }
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+.card-title{font-size:0.62rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1rem;}
 
 /* METRIC CARDS */
-.metric-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.25rem; }
-.metric-label { font-size:0.65rem; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:0.5rem; }
-.metric-value { font-family:'Syne',sans-serif; font-weight:700; font-size:1.6rem; }
-.metric-sub { font-size:0.65rem; color:var(--muted); margin-top:0.3rem; }
-.metric-value.green { color:var(--green); }
-.metric-value.red { color:var(--red); }
-.metric-value.amber { color:var(--amber); }
-.metric-value.blue { color:var(--blue); }
+.metric-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.25rem;box-shadow:0 1px 4px rgba(0,0,0,0.04);}
+.metric-label{font-size:0.62rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;}
+.metric-value{font-family:'Syne',sans-serif;font-weight:700;font-size:1.5rem;}
+.metric-sub{font-size:0.62rem;color:var(--muted);margin-top:0.35rem;}
+.metric-value.green{color:var(--green);}
+.metric-value.red{color:var(--red);}
+.metric-value.amber{color:var(--amber);}
+.metric-value.blue{color:var(--blue);}
+.metric-value.accent{color:var(--accent);}
 
-/* CREDIT BAR */
-.credit-item { margin-bottom:1.25rem; }
-.credit-item:last-child { margin-bottom:0; }
-.credit-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.4rem; }
-.credit-name { font-size:0.72rem; }
-.credit-pct { font-family:'Syne',sans-serif; font-weight:700; font-size:0.9rem; }
-.credit-pct.danger { color:var(--red); }
-.credit-pct.ok { color:var(--green); }
-.credit-track { height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
-.credit-fill { height:100%; border-radius:3px; transition:width 0.8s ease; }
-.credit-fill.danger { background:linear-gradient(90deg, var(--amber), var(--red)); }
-.credit-fill.ok { background:var(--green); }
-.credit-detail { font-size:0.62rem; color:var(--muted); margin-top:0.3rem; }
+/* PROGRESS BAR */
+.progress-track{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:0.6rem;}
+.progress-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
 
-/* TRANSACTION LIST */
-.tx-item { display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0; border-bottom:1px solid var(--border); }
-.tx-item:last-child { border-bottom:none; }
-.tx-name { font-size:0.72rem; }
-.tx-date { font-size:0.62rem; color:var(--muted); margin-top:0.15rem; }
-.tx-amount { font-family:'Syne',sans-serif; font-weight:600; font-size:0.85rem; }
-.tx-amount.out { color:var(--red); }
-.tx-amount.in { color:var(--green); }
+/* CREDIT BARS */
+.credit-item{margin-bottom:1.25rem;}
+.credit-item:last-child{margin-bottom:0;}
+.credit-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.4rem;}
+.credit-name{font-size:0.7rem;}
+.credit-pct{font-family:'Syne',sans-serif;font-weight:700;font-size:0.9rem;}
+.credit-pct.danger{color:var(--red);}
+.credit-pct.ok{color:var(--green);}
+.credit-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+.credit-fill{height:100%;border-radius:3px;}
+.credit-fill.danger{background:linear-gradient(90deg,var(--amber),var(--red));}
+.credit-fill.ok{background:var(--green);}
+.credit-detail{font-size:0.6rem;color:var(--muted);margin-top:0.3rem;}
 
-/* BILL LIST */
-.bill-item { display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0; border-bottom:1px solid var(--border); }
-.bill-item:last-child { border-bottom:none; }
-.bill-name { font-size:0.72rem; }
-.bill-due { font-size:0.6rem; color:var(--muted); margin-top:0.15rem; }
-.bill-amount { font-family:'Syne',sans-serif; font-weight:600; font-size:0.85rem; color:var(--amber); }
-.bill-urgent { color:var(--red); }
+/* ROWS */
+.tx-item{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--border);}
+.tx-item:last-child{border-bottom:none;}
+.tx-name{font-size:0.7rem;}
+.tx-date{font-size:0.6rem;color:var(--muted);margin-top:0.1rem;}
+.tx-amount{font-family:'Syne',sans-serif;font-weight:600;font-size:0.82rem;}
+.tx-amount.out{color:var(--red);}
+.tx-amount.in{color:var(--green);}
+.tx-amount.warn{color:var(--amber);}
 
-/* ALERT */
-.alert { border-radius:10px; padding:0.9rem 1.1rem; margin-bottom:1rem; font-size:0.72rem; border-left:3px solid; line-height:1.6; }
-.alert.danger { background:rgba(240,82,82,0.08); border-color:var(--red); color:#fca5a5; }
-.alert.warning { background:rgba(245,158,11,0.08); border-color:var(--amber); color:#fcd34d; }
-.alert.ok { background:rgba(34,211,165,0.08); border-color:var(--green); color:#6ee7b7; }
-.alert strong { font-weight:500; }
+/* ALERTS */
+.alert{border-radius:12px;padding:0.9rem 1.1rem;margin-bottom:1rem;font-size:0.7rem;border-left:3px solid;line-height:1.6;}
+.alert.danger{background:#fff5f5;border-color:var(--red);color:#c92a2a;}
+.alert.warning{background:#fff9db;border-color:var(--amber);color:#b45309;}
+.alert.ok{background:#ebfbee;border-color:var(--green);color:#2b8a3e;}
+.alert strong{font-weight:500;}
 
-/* PROJECTION SLIDERS */
-.slider-section { margin-bottom:1.5rem; }
-.slider-label { display:flex; justify-content:space-between; font-size:0.72rem; margin-bottom:0.5rem; }
-.slider-label span:last-child { color:var(--accent); font-family:'Syne',sans-serif; font-weight:600; }
-input[type=range] { width:100%; -webkit-appearance:none; height:4px; border-radius:2px; background:var(--surface2); outline:none; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent); cursor:pointer; }
+/* SLIDERS */
+.slider-section{margin-bottom:1.25rem;}
+.slider-label{display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:0.5rem;}
+.slider-label span:last-child{color:var(--accent);font-family:'Syne',sans-serif;font-weight:600;}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:var(--surface2);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 2px 6px rgba(45,42,255,0.3);}
+input[type=number]{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:0.3rem 0.6rem;color:var(--text);font-family:'DM Mono',monospace;font-size:0.72rem;width:130px;outline:none;}
 
 /* PROJECTION TABLE */
-.proj-table { width:100%; border-collapse:collapse; font-size:0.7rem; }
-.proj-table th { text-align:left; color:var(--muted); font-weight:400; padding:0.5rem 0.75rem; letter-spacing:0.06em; font-size:0.62rem; text-transform:uppercase; border-bottom:1px solid var(--border2); }
-.proj-table td { padding:0.6rem 0.75rem; border-bottom:1px solid var(--border); }
-.proj-table tr:last-child td { border-bottom:none; }
-.proj-table .month { font-family:'Syne',sans-serif; font-weight:600; }
-.pos { color:var(--green); }
-.neg { color:var(--red); }
-.warn { color:var(--amber); }
+.proj-table{width:100%;border-collapse:collapse;font-size:0.68rem;}
+.proj-table th{text-align:left;color:var(--muted);font-weight:400;padding:0.5rem 0.75rem;letter-spacing:0.06em;font-size:0.6rem;text-transform:uppercase;border-bottom:1px solid var(--border2);}
+.proj-table td{padding:0.6rem 0.75rem;border-bottom:1px solid var(--border);}
+.proj-table tr:last-child td{border-bottom:none;}
+.proj-table .month{font-family:'Syne',sans-serif;font-weight:600;}
+.pos{color:var(--green);}
+.neg{color:var(--red);}
+.warn{color:var(--amber);}
 
-/* SCENARIO RESULT CARDS */
-.result-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-bottom:1.5rem; }
-.result-card { background:var(--surface2); border-radius:10px; padding:1rem; text-align:center; }
-.result-card .rlabel { font-size:0.62rem; color:var(--muted); margin-bottom:0.4rem; letter-spacing:0.06em; text-transform:uppercase; }
-.result-card .rvalue { font-family:'Syne',sans-serif; font-weight:700; font-size:1.2rem; }
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+.result-card{background:var(--surface2);border-radius:12px;padding:1rem;text-align:center;}
+.result-card .rlabel{font-size:0.6rem;color:var(--muted);margin-bottom:0.4rem;letter-spacing:0.06em;text-transform:uppercase;}
+.result-card .rvalue{font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;}
 
-/* STATUS DOT */
-.status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
-.dot-green { background:var(--green); box-shadow:0 0 6px var(--green); }
-.dot-red { background:var(--red); box-shadow:0 0 6px var(--red); }
-.dot-amber { background:var(--amber); box-shadow:0 0 6px var(--amber); }
-
-/* WEEK CASH FLOW */
-.week-row { display:flex; align-items:center; gap:1rem; padding:0.75rem 0; border-bottom:1px solid var(--border); font-size:0.72rem; }
-.week-row:last-child { border-bottom:none; }
-.week-label { width:80px; color:var(--muted); flex-shrink:0; }
-.week-bar-track { flex:1; height:8px; background:var(--surface2); border-radius:4px; overflow:hidden; }
-.week-bar-fill { height:100%; border-radius:4px; }
-.week-amount { width:70px; text-align:right; font-family:'Syne',sans-serif; font-weight:600; font-size:0.8rem; flex-shrink:0; }
-
-/* SAVINGS TRACKER */
-.savings-goal { margin-bottom:1rem; }
-.savings-header { display:flex; justify-content:space-between; font-size:0.72rem; margin-bottom:0.4rem; }
-.savings-track { height:10px; background:var(--surface2); border-radius:5px; overflow:hidden; margin-bottom:0.3rem; }
-.savings-fill { height:100%; border-radius:5px; }
-.savings-detail { font-size:0.62rem; color:var(--muted); }
+/* SAVINGS */
+.savings-goal{margin-bottom:1rem;}
+.savings-header{display:flex;justify-content:space-between;font-size:0.7rem;margin-bottom:0.4rem;}
+.savings-track{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:0.25rem;}
+.savings-fill{height:100%;border-radius:4px;}
+.savings-detail{font-size:0.6rem;color:var(--muted);}
 
 @media(max-width:768px){
   .metrics-row{grid-template-columns:1fr 1fr;}
   .two-col,.three-col{grid-template-columns:1fr;}
   .result-grid{grid-template-columns:1fr 1fr;}
+  .panel{padding:1rem;}
 }
 </style>
 </head>
 <body>
 
+<!-- ══ PIN SCREEN ══ -->
+<div id="pinScreen">
+  <div class="pin-logo">YK<span class="dot"></span>FINANCE OS</div>
+  <div class="pin-card">
+    <div class="pin-label">Enter your PIN</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="d0"></div>
+      <div class="pin-dot" id="d1"></div>
+      <div class="pin-dot" id="d2"></div>
+      <div class="pin-dot" id="d3"></div>
+    </div>
+    <div class="pin-grid" id="pinGrid">
+      <button class="pin-btn" onclick="pinPress('1')">1</button>
+      <button class="pin-btn" onclick="pinPress('2')">2</button>
+      <button class="pin-btn" onclick="pinPress('3')">3</button>
+      <button class="pin-btn" onclick="pinPress('4')">4</button>
+      <button class="pin-btn" onclick="pinPress('5')">5</button>
+      <button class="pin-btn" onclick="pinPress('6')">6</button>
+      <button class="pin-btn" onclick="pinPress('7')">7</button>
+      <button class="pin-btn" onclick="pinPress('8')">8</button>
+      <button class="pin-btn" onclick="pinPress('9')">9</button>
+      <button class="pin-btn zero" onclick="pinPress('0')">0</button>
+      <button class="pin-btn del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-error" id="pinError">Incorrect PIN — try again</div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="app">
+
 <div class="header">
-  <div class="logo">YK <span>FINANCE</span> OS</div>
-  <div class="date-badge" id="currentDate"></div>
+  <div class="logo">YK<span class="dot"></span>FINANCE OS</div>
+  <div class="header-right">
+    <div class="date-badge" id="currentDate"></div>
+    <div class="lock-btn" onclick="lockApp()">🔒 Lock</div>
+  </div>
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('status')">STATUS</div>
-  <div class="tab" onclick="switchTab('projection')">PROJECTION</div>
-  <div class="tab" onclick="switchTab('paydown')">PAYDOWN</div>
+  <div class="tab active" onclick="switchTab('status',this)">STATUS</div>
+  <div class="tab" onclick="switchTab('projection',this)">PROJECTION</div>
+  <div class="tab" onclick="switchTab('paydown',this)">PAYDOWN</div>
 </div>
 
-<!-- STATUS PANEL -->
+<!-- STATUS -->
 <div id="panel-status" class="panel active">
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">
-  <div class="metric-card" style="border-color:rgba(124,106,247,0.3)">
-    <div class="metric-label">AI Tools Cost — This Month</div>
-    <div style="display:flex;align-items:baseline;gap:0.5rem">
-      <div class="metric-value" style="color:var(--accent)" id="aiCost">$16.86</div>
-      <div style="font-size:0.65rem;color:var(--muted)">/ $50 budget</div>
+    <div class="metric-card" style="border-color:rgba(45,42,255,0.15)">
+      <div class="metric-label">AI Tools Cost — April</div>
+      <div style="display:flex;align-items:baseline;gap:0.5rem">
+        <div class="metric-value accent">$16.86</div>
+        <div style="font-size:0.62rem;color:var(--muted)">/ $50 budget</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:34%;background:var(--accent)"></div></div>
+      <div class="metric-sub">Anthropic $5.44 · Make.com $11.53 · $33 remaining</div>
     </div>
-    <div style="margin-top:0.6rem;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden">
-      <div style="width:33%;height:100%;background:var(--accent);border-radius:3px"></div>
+    <div class="metric-card" style="border-color:rgba(0,168,120,0.2)">
+      <div class="metric-label">Weekly Spend — This Week</div>
+      <div style="display:flex;align-items:baseline;gap:0.5rem">
+        <div class="metric-value green" id="weeklySpend">$0</div>
+        <div style="font-size:0.62rem;color:var(--muted)">/ $650 budget</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="weeklyBar" style="width:0%;background:var(--green)"></div></div>
+      <div style="display:flex;gap:0.5rem;align-items:center;margin-top:0.6rem">
+        <input type="number" placeholder="Type total spent $" oninput="updateWeekly(this.value)" style="flex:1">
+        <span style="font-size:0.6rem;color:var(--muted)" id="weeklyLeft">$650 left</span>
+      </div>
     </div>
-    <div class="metric-sub" style="margin-top:0.4rem">Anthropic $5.44 · Make.com $11.53 · remaining: $33.14</div>
   </div>
-  <div class="metric-card" style="border-color:rgba(34,211,165,0.3)">
-    <div class="metric-label">Weekly Spend — This Week</div>
-    <div style="display:flex;align-items:baseline;gap:0.5rem">
-      <div class="metric-value" id="weeklySpend" style="color:var(--green)">$0</div>
-      <div style="font-size:0.65rem;color:var(--muted)">/ $650 budget</div>
-    </div>
-    <div style="margin-top:0.6rem;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden">
-      <div id="weeklyBar" style="width:0%;height:100%;background:var(--green);border-radius:3px;transition:all 0.4s"></div>
-    </div>
-    <div style="margin-top:0.6rem;display:flex;gap:0.5rem;align-items:center">
-      <input type="number" placeholder="Enter spent $" oninput="updateWeekly(this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:0.3rem 0.6rem;color:var(--text);font-family:DM Mono,monospace;font-size:0.72rem;width:130px;outline:none">
-      <span style="font-size:0.62rem;color:var(--muted)">type total spent</span>
-    </div>
-    <div class="metric-sub" style="margin-top:0.4rem" id="weeklyLeft">$650 left this week — update daily</div>
-  </div>
-</div>
-<div class="alert warning"><strong>TAX DEADLINE:</strong> $4,027 due Apr 10 — pay from debit after Julia's $2,000 lands Mon/Tue. Do NOT use PayPal or Amazon cards.</div>
+
+  <div class="alert warning"><strong>TAX DEADLINE:</strong> $4,027 due Apr 10 — pay from debit after Julia's $2,000 lands Mon/Tue. Do NOT use PayPal or Amazon cards.</div>
 
   <div class="metrics-row">
     <div class="metric-card">
@@ -221,266 +314,141 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; h
     <div class="card">
       <div class="card-title">Credit Card Utilization</div>
       <div class="credit-item">
-        <div class="credit-header">
-          <span class="credit-name">PayPal Cashback Mastercard ••3722</span>
-          <span class="credit-pct danger">88%</span>
-        </div>
+        <div class="credit-header"><span class="credit-name">PayPal Cashback ••3722</span><span class="credit-pct danger">88%</span></div>
         <div class="credit-track"><div class="credit-fill danger" style="width:88%"></div></div>
-        <div class="credit-detail">$4,507 / $5,111 limit — $78/mo interest burning — FREEZE THIS CARD</div>
+        <div class="credit-detail">$4,507 / $5,111 — $78/mo interest — FREEZE</div>
       </div>
       <div class="credit-item">
-        <div class="credit-header">
-          <span class="credit-name">Amazon / Synchrony ••2914</span>
-          <span class="credit-pct danger">72%</span>
-        </div>
+        <div class="credit-header"><span class="credit-name">Amazon / Synchrony ••2914</span><span class="credit-pct danger">72%</span></div>
         <div class="credit-track"><div class="credit-fill danger" style="width:72%"></div></div>
-        <div class="credit-detail">$1,993 / $2,775 limit — due Apr 8 — FREEZE THIS CARD</div>
+        <div class="credit-detail">$1,993 / $2,775 — due Apr 8 — FREEZE</div>
       </div>
       <div class="credit-item">
-        <div class="credit-header">
-          <span class="credit-name">Bank of America ••8841</span>
-          <span class="credit-pct ok">10%</span>
-        </div>
+        <div class="credit-header"><span class="credit-name">Bank of America ••8841</span><span class="credit-pct ok">10%</span></div>
         <div class="credit-track"><div class="credit-fill ok" style="width:10%"></div></div>
-        <div class="credit-detail">$255 / $2,500 limit — GOOD — emergency use only</div>
+        <div class="credit-detail">$255 / $2,500 — emergency use only ✓</div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Upcoming Bills — Next 30 Days</div>
-      <div class="bill-item">
-        <div><div class="bill-name bill-urgent">🚨 TAX PAYMENT</div><div class="bill-due">Due Apr 10</div></div>
-        <div class="bill-amount bill-urgent">$4,027</div>
-      </div>
-      <div class="bill-item">
-        <div><div class="bill-name">Amazon Card Minimum</div><div class="bill-due">Due Apr 8</div></div>
-        <div class="bill-amount">$62</div>
-      </div>
-      <div class="bill-item">
-        <div><div class="bill-name">Verizon (autopay)</div><div class="bill-due">Due Apr 10</div></div>
-        <div class="bill-amount">$312</div>
-      </div>
-      <div class="bill-item">
-        <div><div class="bill-name">Rent</div><div class="bill-due">Due May 1</div></div>
-        <div class="bill-amount">$3,000</div>
-      </div>
-      <div class="bill-item">
-        <div><div class="bill-name">Daycare</div><div class="bill-due">Monthly</div></div>
-        <div class="bill-amount">$900</div>
-      </div>
-      <div class="bill-item">
-        <div><div class="bill-name">Julia Dentist</div><div class="bill-due">~June 2026</div></div>
-        <div class="bill-amount">$3,000</div>
-      </div>
+      <div class="card-title">Upcoming Bills</div>
+      <div class="tx-item"><div><div class="tx-name" style="color:var(--red);font-weight:500">🚨 Tax Payment</div><div class="tx-date">Due Apr 10</div></div><div class="tx-amount out">$4,027</div></div>
+      <div class="tx-item"><div><div class="tx-name">Amazon Card Min</div><div class="tx-date">Due Apr 8</div></div><div class="tx-amount warn">$62</div></div>
+      <div class="tx-item"><div><div class="tx-name">Verizon (autopay)</div><div class="tx-date">Apr 10</div></div><div class="tx-amount warn">$312</div></div>
+      <div class="tx-item"><div><div class="tx-name">Rent</div><div class="tx-date">May 1</div></div><div class="tx-amount warn">$3,000</div></div>
+      <div class="tx-item"><div><div class="tx-name">Daycare</div><div class="tx-date">Monthly</div></div><div class="tx-amount warn">$900</div></div>
+      <div class="tx-item"><div><div class="tx-name">Julia Dentist</div><div class="tx-date">~June 2026</div></div><div class="tx-amount out">$3,000</div></div>
     </div>
   </div>
 
   <div class="three-col">
     <div class="card">
       <div class="card-title">Income This Week</div>
-      <div class="tx-item">
-        <div><div class="tx-name">SBG Payroll — Yurii</div><div class="tx-date">Apr 3 (landed)</div></div>
-        <div class="tx-amount in">+$1,956</div>
-      </div>
-      <div class="tx-item">
-        <div><div class="tx-name">Julia Salary</div><div class="tx-date">Expected Mon/Tue</div></div>
-        <div class="tx-amount in">+$2,000</div>
-      </div>
-      <div class="tx-item">
-        <div><div class="tx-name">Vestiaire Refund</div><div class="tx-date">Apr 3</div></div>
-        <div class="tx-amount in">+$558</div>
-      </div>
+      <div class="tx-item"><div><div class="tx-name">SBG Payroll — Yurii</div><div class="tx-date">Apr 3 ✓</div></div><div class="tx-amount in">+$1,956</div></div>
+      <div class="tx-item"><div><div class="tx-name">Julia Salary</div><div class="tx-date">Expected Mon/Tue</div></div><div class="tx-amount in">+$2,000</div></div>
+      <div class="tx-item"><div><div class="tx-name">Vestiaire Refund</div><div class="tx-date">Apr 3 ✓</div></div><div class="tx-amount in">+$558</div></div>
     </div>
-
     <div class="card">
-      <div class="card-title">Recent Spending (Apr)</div>
-      <div class="tx-item">
-        <div><div class="tx-name">PayPal → CC Payment</div><div class="tx-date">Apr 1</div></div>
-        <div class="tx-amount out">−$500</div>
-      </div>
-      <div class="tx-item">
-        <div><div class="tx-name">BofA CC Payment</div><div class="tx-date">Apr 4</div></div>
-        <div class="tx-amount out">−$359</div>
-      </div>
-      <div class="tx-item">
-        <div><div class="tx-name">Amazon CC Payment</div><div class="tx-date">Apr 4</div></div>
-        <div class="tx-amount out">−$300</div>
-      </div>
-      <div class="tx-item">
-        <div><div class="tx-name">Make.com</div><div class="tx-date">Apr 3</div></div>
-        <div class="tx-amount out">−$11.53</div>
-      </div>
-      <div class="tx-item">
-        <div><div class="tx-name">IPSY Beauty</div><div class="tx-date">Apr 2</div></div>
-        <div class="tx-amount out">−$53.90</div>
-      </div>
+      <div class="card-title">Recent Spending</div>
+      <div class="tx-item"><div><div class="tx-name">PayPal CC Payment</div><div class="tx-date">Apr 1</div></div><div class="tx-amount out">−$500</div></div>
+      <div class="tx-item"><div><div class="tx-name">BofA CC Payment</div><div class="tx-date">Apr 4</div></div><div class="tx-amount out">−$359</div></div>
+      <div class="tx-item"><div><div class="tx-name">Amazon CC Payment</div><div class="tx-date">Apr 4</div></div><div class="tx-amount out">−$300</div></div>
+      <div class="tx-item"><div><div class="tx-name">IPSY Beauty</div><div class="tx-date">Apr 2</div></div><div class="tx-amount out">−$53.90</div></div>
+      <div class="tx-item"><div><div class="tx-name">Make.com</div><div class="tx-date">Apr 3</div></div><div class="tx-amount out">−$11.53</div></div>
     </div>
-
     <div class="card">
       <div class="card-title">Savings Targets</div>
       <div class="savings-goal">
-        <div class="savings-header">
-          <span>Tax Payment (Apr 10)</span>
-          <span style="color:var(--amber)">$4,027 needed</span>
-        </div>
+        <div class="savings-header"><span>Tax (Apr 10)</span><span style="color:var(--amber)">Covered ✓</span></div>
         <div class="savings-track"><div class="savings-fill" style="width:100%;background:var(--amber)"></div></div>
-        <div class="savings-detail">Covered by debit + Julia paycheck ✓</div>
+        <div class="savings-detail">Debit + Julia paycheck covers it</div>
       </div>
       <div class="savings-goal">
-        <div class="savings-header">
-          <span>Julia Dentist (June)</span>
-          <span style="color:var(--red)">$0 / $3,000</span>
-        </div>
-        <div class="savings-track"><div class="savings-fill" style="width:2%;background:var(--red)"></div></div>
-        <div class="savings-detail">Start saving $500/wk now — 8 weeks to June</div>
+        <div class="savings-header"><span>Julia Dentist (June)</span><span style="color:var(--red)">$0 / $3,000</span></div>
+        <div class="savings-track"><div class="savings-fill" style="width:1%;background:var(--red)"></div></div>
+        <div class="savings-detail">Save $500/wk — 8 weeks to June</div>
       </div>
       <div class="savings-goal">
-        <div class="savings-header">
-          <span>Summer Camp Buffer (July)</span>
-          <span style="color:var(--red)">$0 / $1,200</span>
-        </div>
-        <div class="savings-track"><div class="savings-fill" style="width:2%;background:var(--red)"></div></div>
-        <div class="savings-detail">+$600/mo daycare starting July — save now</div>
+        <div class="savings-header"><span>Summer Camp Buffer</span><span style="color:var(--red)">$0 / $1,200</span></div>
+        <div class="savings-track"><div class="savings-fill" style="width:1%;background:var(--red)"></div></div>
+        <div class="savings-detail">+$600/mo daycare from July</div>
       </div>
       <div class="savings-goal">
-        <div class="savings-header">
-          <span>Emergency Buffer</span>
-          <span style="color:var(--red)">$255 / $5,000</span>
-        </div>
+        <div class="savings-header"><span>Emergency Fund</span><span style="color:var(--blue)">$255 / $5,000</span></div>
         <div class="savings-track"><div class="savings-fill" style="width:5%;background:var(--blue)"></div></div>
-        <div class="savings-detail">PayPal savings $255.36 — far from target</div>
+        <div class="savings-detail">PayPal savings account</div>
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- PROJECTION PANEL -->
+<!-- PROJECTION -->
 <div id="panel-projection" class="panel">
-
-  <div class="two-col" style="margin-bottom:1.5rem">
+  <div class="two-col">
     <div class="card">
       <div class="card-title">Scenario Controls</div>
-      <div class="slider-section">
-        <div class="slider-label"><span>Extra PayPal Payment/mo</span><span id="paypalExtra-val">$500</span></div>
-        <input type="range" id="paypalExtra" min="0" max="1500" step="50" value="500" oninput="updateProjection()">
-      </div>
-      <div class="slider-section">
-        <div class="slider-label"><span>Extra Amazon Payment/mo</span><span id="amazonExtra-val">$300</span></div>
-        <input type="range" id="amazonExtra" min="0" max="1000" step="50" value="300" oninput="updateProjection()">
-      </div>
-      <div class="slider-section">
-        <div class="slider-label"><span>Julia Income Increase/mo</span><span id="juliaIncome-val">$0</span></div>
-        <input type="range" id="juliaIncome" min="0" max="2000" step="100" value="0" oninput="updateProjection()">
-      </div>
-      <div class="slider-section">
-        <div class="slider-label"><span>Weekly Discretionary Spend</span><span id="spending-val">$650</span></div>
-        <input type="range" id="spending" min="400" max="1200" step="50" value="650" oninput="updateProjection()">
-      </div>
-      <div class="slider-section">
-        <div class="slider-label"><span>Dentist Savings/mo</span><span id="dentist-val">$500</span></div>
-        <input type="range" id="dentist" min="0" max="1500" step="100" value="500" oninput="updateProjection()">
-      </div>
+      <div class="slider-section"><div class="slider-label"><span>Extra PayPal Payment/mo</span><span id="v1">$500</span></div><input type="range" min="0" max="1500" step="50" value="500" oninput="updateProjection(this.value,'v1',null)"></div>
+      <div class="slider-section"><div class="slider-label"><span>Extra Amazon Payment/mo</span><span id="v2">$300</span></div><input type="range" min="0" max="1000" step="50" value="300" oninput="updateProjection(null,null,null,this.value,'v2')"></div>
+      <div class="slider-section"><div class="slider-label"><span>Julia Income Increase/mo</span><span id="v3">$0</span></div><input type="range" min="0" max="2000" step="100" value="0" oninput="updateProjection(null,null,this.value,null,null,'v3')"></div>
+      <div class="slider-section"><div class="slider-label"><span>Weekly Discretionary</span><span id="v4">$650</span></div><input type="range" min="400" max="1200" step="50" value="650" oninput="updateProjection(null,null,null,null,null,null,this.value,'v4')"></div>
+      <div class="slider-section"><div class="slider-label"><span>Dentist Savings/mo</span><span id="v5">$500</span></div><input type="range" min="0" max="1500" step="100" value="500" oninput="updateProjection(null,null,null,null,null,null,null,null,this.value,'v5')"></div>
     </div>
-
     <div class="card">
       <div class="card-title">Projected Outcomes</div>
       <div class="result-grid">
-        <div class="result-card">
-          <div class="rlabel">PayPal Free</div>
-          <div class="rvalue" id="paypalFreeDate" style="color:var(--accent)">—</div>
-        </div>
-        <div class="result-card">
-          <div class="rlabel">Amazon Free</div>
-          <div class="rvalue" id="amazonFreeDate" style="color:var(--green)">—</div>
-        </div>
-        <div class="result-card">
-          <div class="rlabel">Dentist Ready</div>
-          <div class="rvalue" id="dentistReady" style="color:var(--amber)">—</div>
-        </div>
+        <div class="result-card"><div class="rlabel">PayPal Free</div><div class="rvalue" id="r1" style="color:var(--accent)">—</div></div>
+        <div class="result-card"><div class="rlabel">Amazon Free</div><div class="rvalue" id="r2" style="color:var(--green)">—</div></div>
+        <div class="result-card"><div class="rlabel">Dentist Ready</div><div class="rvalue" id="r3" style="color:var(--amber)">—</div></div>
       </div>
       <div class="result-grid">
-        <div class="result-card">
-          <div class="rlabel">PayPal @ 30%</div>
-          <div class="rvalue" id="paypal30" style="color:var(--blue)">—</div>
-        </div>
-        <div class="result-card">
-          <div class="rlabel">Amazon @ 30%</div>
-          <div class="rvalue" id="amazon30" style="color:var(--blue)">—</div>
-        </div>
-        <div class="result-card">
-          <div class="rlabel">Monthly Free Cash</div>
-          <div class="rvalue" id="freeCash" style="color:var(--green)">—</div>
-        </div>
+        <div class="result-card"><div class="rlabel">PayPal @ 30%</div><div class="rvalue" id="r4" style="color:var(--blue)">—</div></div>
+        <div class="result-card"><div class="rlabel">Amazon @ 30%</div><div class="rvalue" id="r5" style="color:var(--blue)">—</div></div>
+        <div class="result-card"><div class="rlabel">Free Cash/mo</div><div class="rvalue" id="r6" style="color:var(--green)">—</div></div>
       </div>
     </div>
   </div>
-
   <div class="card">
-    <div class="card-title">6-Month Cash Flow Projection</div>
+    <div class="card-title">6-Month Projection</div>
     <table class="proj-table">
-      <thead>
-        <tr>
-          <th>Month</th>
-          <th>Income</th>
-          <th>Fixed Costs</th>
-          <th>Variable</th>
-          <th>CC Payments</th>
-          <th>Savings</th>
-          <th>Net</th>
-          <th>PayPal Bal</th>
-          <th>Amazon Bal</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Month</th><th>Income</th><th>Fixed</th><th>Variable</th><th>CC Pmts</th><th>Savings</th><th>Net</th><th>PayPal</th><th>Amazon</th></tr></thead>
       <tbody id="projTable"></tbody>
     </table>
   </div>
-
 </div>
 
-<!-- PAYDOWN PANEL -->
+<!-- PAYDOWN -->
 <div id="panel-paydown" class="panel">
-
-  <div class="alert danger"><strong>CRITICAL:</strong> PayPal at 88% utilization is your biggest credit score killer. $78/month in interest = $936/year wasted. Priority: get both cards under 30% ASAP.</div>
-
+  <div class="alert danger"><strong>CRITICAL:</strong> PayPal 88% utilization = $78/month interest = $936/year burned. Get both cards under 30% ASAP.</div>
   <div class="two-col">
     <div class="card">
-      <div class="card-title">PayPal Cashback ••3722 — Paydown Plan</div>
+      <div class="card-title">PayPal ••3722 — Paydown</div>
       <div class="credit-item" style="margin-bottom:1rem">
-        <div class="credit-header">
-          <span class="credit-name">Current: $4,507 / $5,111</span>
-          <span class="credit-pct danger">88%</span>
-        </div>
+        <div class="credit-header"><span class="credit-name">$4,507 / $5,111</span><span class="credit-pct danger">88%</span></div>
         <div class="credit-track"><div class="credit-fill danger" style="width:88%"></div></div>
-        <div class="credit-detail">Target 30%: $1,533 — need to pay down $2,974</div>
+        <div class="credit-detail">Need to reach 30% = $1,533. Pay down $2,974.</div>
       </div>
-      <div class="tx-item"><div class="tx-name">Current interest/month</div><div class="tx-amount out">$78.67</div></div>
+      <div class="tx-item"><div class="tx-name">Interest/month</div><div class="tx-amount out">$78.67</div></div>
       <div class="tx-item"><div class="tx-name">Minimum payment</div><div class="tx-amount">$125</div></div>
-      <div class="tx-item"><div class="tx-name">At min only — payoff time</div><div class="tx-amount warn">6+ years</div></div>
-      <div class="tx-item"><div class="tx-name">At $500/mo extra — 30% util</div><div class="tx-amount" style="color:var(--blue)">~6 months</div></div>
-      <div class="tx-item"><div class="tx-name">At $800/mo extra — 30% util</div><div class="tx-amount" style="color:var(--green)">~4 months</div></div>
+      <div class="tx-item"><div class="tx-name">Minimum only — payoff</div><div class="tx-amount warn">6+ years</div></div>
+      <div class="tx-item"><div class="tx-name">+$500/mo → 30% util</div><div class="tx-amount blue" style="color:var(--blue)">~6 months</div></div>
+      <div class="tx-item"><div class="tx-name">+$800/mo → 30% util</div><div class="tx-amount" style="color:var(--green)">~4 months</div></div>
     </div>
-
     <div class="card">
-      <div class="card-title">Amazon / Synchrony ••2914 — Paydown Plan</div>
+      <div class="card-title">Amazon ••2914 — Paydown</div>
       <div class="credit-item" style="margin-bottom:1rem">
-        <div class="credit-header">
-          <span class="credit-name">Current: $1,993 / $2,775</span>
-          <span class="credit-pct danger">72%</span>
-        </div>
+        <div class="credit-header"><span class="credit-name">$1,993 / $2,775</span><span class="credit-pct danger">72%</span></div>
         <div class="credit-track"><div class="credit-fill danger" style="width:72%"></div></div>
-        <div class="credit-detail">Target 30%: $833 — need to pay down $1,160</div>
+        <div class="credit-detail">Need to reach 30% = $833. Pay down $1,160.</div>
       </div>
-      <div class="tx-item"><div class="tx-name">Current interest/month</div><div class="tx-amount out">$46.62</div></div>
+      <div class="tx-item"><div class="tx-name">Interest/month</div><div class="tx-amount out">$46.62</div></div>
       <div class="tx-item"><div class="tx-name">Minimum payment</div><div class="tx-amount">$62</div></div>
-      <div class="tx-item"><div class="tx-name">At min only — payoff time</div><div class="tx-amount warn">3 years</div></div>
-      <div class="tx-item"><div class="tx-name">At $300/mo extra — 30% util</div><div class="tx-amount" style="color:var(--blue)">~4 months</div></div>
-      <div class="tx-item"><div class="tx-name">At $500/mo extra — 30% util</div><div class="tx-amount" style="color:var(--green)">~2.5 months</div></div>
+      <div class="tx-item"><div class="tx-name">Minimum only — payoff</div><div class="tx-amount warn">3 years</div></div>
+      <div class="tx-item"><div class="tx-name">+$300/mo → 30% util</div><div class="tx-amount" style="color:var(--blue)">~4 months</div></div>
+      <div class="tx-item"><div class="tx-name">+$500/mo → 30% util</div><div class="tx-amount" style="color:var(--green)">~2.5 months</div></div>
     </div>
   </div>
-
   <div class="card">
-    <div class="card-title">Fixed Monthly Expenses Breakdown</div>
+    <div class="card-title">Fixed Monthly Breakdown — $5,195/mo</div>
     <div class="three-col" style="margin:0">
       <div>
         <div class="tx-item"><div class="tx-name">Rent</div><div class="tx-amount">$3,000</div></div>
@@ -490,7 +458,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; h
       <div>
         <div class="tx-item"><div class="tx-name">ConEd</div><div class="tx-amount">$219</div></div>
         <div class="tx-item"><div class="tx-name">MTA</div><div class="tx-amount">$280</div></div>
-        <div class="tx-item"><div class="tx-name">Subscriptions</div><div class="tx-amount warn">$207</div></div>
+        <div class="tx-item"><div class="tx-name">Subscriptions ⚠️</div><div class="tx-amount warn">$207</div></div>
       </div>
       <div>
         <div class="tx-item"><div class="tx-name">Therapy</div><div class="tx-amount">$157</div></div>
@@ -498,126 +466,140 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; h
         <div class="tx-item"><div class="tx-name">Water</div><div class="tx-amount">$40</div></div>
       </div>
     </div>
-    <div style="border-top:1px solid var(--border2);margin-top:0.5rem;padding-top:0.75rem;display:flex;justify-content:space-between;font-size:0.8rem">
-      <span style="color:var(--muted)">Total Fixed Monthly</span>
-      <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--red)">$5,195</span>
-    </div>
   </div>
-
 </div>
 
-<script>
-// Set date
-document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+</div><!-- end app -->
 
-function switchTab(name) {
+<script>
+// ── PIN ──
+const CORRECT = '0023';
+let entered = '';
+
+function pinPress(d){
+  if(entered.length>=4) return;
+  entered += d;
+  document.getElementById('d'+(entered.length-1)).classList.add('filled');
+  if(entered.length===4) setTimeout(checkPin,200);
+}
+function pinDel(){
+  if(!entered.length) return;
+  entered = entered.slice(0,-1);
+  document.getElementById('d'+entered.length).classList.remove('filled');
+}
+function checkPin(){
+  if(entered===CORRECT){
+    const ps = document.getElementById('pinScreen');
+    ps.style.animation='fadeOut 0.4s ease forwards';
+    setTimeout(()=>{
+      ps.style.display='none';
+      const app = document.getElementById('app');
+      app.style.display='block';
+      setTimeout(()=>app.style.opacity='1',10);
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+      updateProjection();
+    },380);
+  } else {
+    document.getElementById('pinGrid').style.animation='shake 0.4s ease';
+    document.getElementById('pinError').classList.add('show');
+    setTimeout(()=>{
+      document.getElementById('pinGrid').style.animation='';
+      document.getElementById('pinError').classList.remove('show');
+      entered='';
+      [0,1,2,3].forEach(i=>document.getElementById('d'+i).classList.remove('filled'));
+    },600);
+  }
+}
+
+function lockApp(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('app').style.opacity='0';
+  const ps = document.getElementById('pinScreen');
+  ps.style.display='flex';
+  ps.style.animation='fadeIn 0.4s ease';
+  entered='';
+  [0,1,2,3].forEach(i=>document.getElementById('d'+i).classList.remove('filled'));
+}
+
+// ── WEEKLY SPEND ──
+function updateWeekly(val){
+  const spent = Math.max(0,parseFloat(val)||0);
+  const pct = Math.min(100,(spent/650)*100);
+  const left = 650-spent;
+  const color = pct>90?'var(--red)':pct>70?'var(--amber)':'var(--green)';
+  document.getElementById('weeklySpend').textContent='$'+spent.toFixed(0);
+  document.getElementById('weeklySpend').style.color=color;
+  document.getElementById('weeklyBar').style.width=pct+'%';
+  document.getElementById('weeklyBar').style.background=color;
+  const day=new Date().getDay();
+  const ctx=day===5?'Friday — weekend budget remaining':day===6||day===0?'Weekend — track carefully':(6-day)+' days left in week';
+  document.getElementById('weeklyLeft').textContent=left>=0?'$'+left.toFixed(0)+' left — '+ctx:'⚠️ Over by $'+Math.abs(left).toFixed(0);
+}
+
+// ── TABS ──
+function switchTab(name,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+name).classList.add('active');
-  event.target.classList.add('active');
-  if(name==='projection') updateProjection();
+  el.classList.add('active');
 }
 
-function fmt(n){ return '$'+Math.abs(Math.round(n)).toLocaleString(); }
-function fmtM(n){ 
-  if(n<=0) return 'Done!';
-  const months=['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
-  const idx = Math.min(Math.round(n)-1, months.length-1);
-  return months[idx]+" '26";
-}
+// ── PROJECTION ──
+let pp=500,am=300,ji=0,sp=650,ds=500;
+function updateProjection(a,b,c,d,e,f,g,h,i,j){
+  if(a!==undefined&&a!==null){pp=+a;if(b)document.getElementById(b).textContent='$'+pp;}
+  if(d!==undefined&&d!==null){am=+d;if(e)document.getElementById(e).textContent='$'+am;}
+  if(c!==undefined&&c!==null){ji=+c;if(f)document.getElementById(f).textContent='$'+ji;}
+  if(g!==undefined&&g!==null){sp=+g;if(h)document.getElementById(h).textContent='$'+sp;}
+  if(i!==undefined&&i!==null){ds=+i;if(j)document.getElementById(j).textContent='$'+ds;}
 
-function updateProjection(){
-  const paypalExtra = +document.getElementById('paypalExtra').value;
-  const amazonExtra = +document.getElementById('amazonExtra').value;
-  const juliaIncome = +document.getElementById('juliaIncome').value;
-  const spending = +document.getElementById('spending').value;
-  const dentistSav = +document.getElementById('dentist').value;
-
-  document.getElementById('paypalExtra-val').textContent = '$'+paypalExtra;
-  document.getElementById('amazonExtra-val').textContent = '$'+amazonExtra;
-  document.getElementById('juliaIncome-val').textContent = '$'+juliaIncome;
-  document.getElementById('spending-val').textContent = '$'+spending;
-  document.getElementById('dentist-val').textContent = '$'+dentistSav;
-
-  const baseIncome = 11800 + juliaIncome;
-  const fixedCosts = 5195;
-  const varMonthly = spending * 4.33;
-  const freeCash = baseIncome - fixedCosts - varMonthly - paypalExtra - amazonExtra - dentistSav;
-  document.getElementById('freeCash').textContent = fmt(freeCash);
-
-  // Starting balances
-  let paypal = 4507;
-  let amazon = 1993;
-  let dentistSaved = 0;
-  let paypalFreeMonth = 0, amazonFreeMonth = 0, dentistMonth = 0;
-  let paypal30Month = 0, amazon30Month = 0;
-  const paypalLimit = 5111, amazonLimit = 2775;
-
-  const months = ['Apr','May','Jun','Jul','Aug','Sep'];
-  let rows = '';
-
-  for(let i=0;i<6;i++){
-    const income = i===0 ? baseIncome - 4027 : (i===2 ? baseIncome - 3000 : baseIncome); // tax in Apr, dentist in Jun
-    const fixedThisMonth = i>=3 ? fixedCosts+600 : fixedCosts; // daycare increase Jul
-    const ppPayment = Math.min(paypal, paypalExtra + 125);
-    const amzPayment = Math.min(amazon, amazonExtra + 62);
-    const dentistThisMonth = Math.min(dentistSav, 3000-dentistSaved);
-    
-    paypal = Math.max(0, paypal - ppPayment + (i===0?0:78));
-    amazon = Math.max(0, amazon - amzPayment + (i===0?0:46));
-    dentistSaved = Math.min(3000, dentistSaved + dentistSav);
-
-    const net = income - fixedThisMonth - varMonthly - ppPayment - amzPayment - dentistThisMonth;
-    
-    if(paypal<=0 && paypalFreeMonth===0) paypalFreeMonth=i+1;
-    if(amazon<=0 && amazonFreeMonth===0) amazonFreeMonth=i+1;
-    if(dentistSaved>=3000 && dentistMonth===0) dentistMonth=i+1;
-    if(paypal/paypalLimit<=0.3 && paypal30Month===0) paypal30Month=i+1;
-    if(amazon/amazonLimit<=0.3 && amazon30Month===0) amazon30Month=i+1;
-
-    const netClass = net>0?'pos':net>-500?'warn':'neg';
-    rows += `<tr>
-      <td class="month">${months[i]}</td>
-      <td class="pos">${fmt(income)}</td>
-      <td class="neg">${fmt(fixedThisMonth)}</td>
-      <td class="neg">${fmt(varMonthly)}</td>
-      <td class="neg">${fmt(ppPayment+amzPayment)}</td>
-      <td style="color:var(--blue)">${fmt(dentistThisMonth)}</td>
-      <td class="${netClass}">${net>=0?'+':''}${fmt(net)}</td>
-      <td class="${paypal/paypalLimit>0.3?'neg':'pos'}">${fmt(paypal)}</td>
-      <td class="${amazon/amazonLimit>0.3?'neg':'pos'}">${fmt(amazon)}</td>
-    </tr>`;
+  // re-read sliders
+  const sliders=document.querySelectorAll('#panel-projection input[type=range]');
+  if(sliders.length===5){
+    pp=+sliders[0].value;am=+sliders[1].value;ji=+sliders[2].value;sp=+sliders[3].value;ds=+sliders[4].value;
+    ['v1','v2','v3','v4','v5'].forEach((id,idx)=>{
+      const el=document.getElementById(id);
+      if(el) el.textContent='$'+[pp,am,ji,sp,ds][idx];
+    });
   }
 
-  document.getElementById('projTable').innerHTML = rows;
-  document.getElementById('paypalFreeDate').textContent = paypalFreeMonth?fmtM(paypalFreeMonth):'6mo+';
-  document.getElementById('amazonFreeDate').textContent = amazonFreeMonth?fmtM(amazonFreeMonth):'6mo+';
-  document.getElementById('dentistReady').textContent = dentistMonth?fmtM(dentistMonth):'6mo+';
-  document.getElementById('paypal30').textContent = paypal30Month?fmtM(paypal30Month):'6mo+';
-  document.getElementById('amazon30').textContent = amazon30Month?fmtM(amazon30Month):'6mo+';
-}
+  const income=11800+ji,fixed=5195,varM=sp*4.33;
+  const free=income-fixed-varM-pp-am-ds;
+  document.getElementById('r6').textContent='$'+Math.round(Math.abs(free));
+  document.getElementById('r6').style.color=free>0?'var(--green)':'var(--red)';
 
-updateProjection();
+  let paypal=4507,amazon=1993,dentSaved=0;
+  let ppFree=0,amFree=0,dentM=0,pp30=0,am30=0;
+  const ppLim=5111,amLim=2775;
+  const months=['Apr','May','Jun','Jul','Aug','Sep'];
+  let rows='';
+
+  for(let idx=0;idx<6;idx++){
+    const inc=idx===0?income-4027:income;
+    const fx=idx>=3?fixed+600:fixed;
+    const ppPay=Math.min(paypal,pp+125);
+    const amPay=Math.min(amazon,am+62);
+    const dent=Math.min(ds,3000-dentSaved);
+    if(idx>0){paypal=Math.max(0,paypal-ppPay+78);amazon=Math.max(0,amazon-amPay+46);}
+    else{paypal=Math.max(0,paypal-ppPay);amazon=Math.max(0,amazon-amPay);}
+    dentSaved=Math.min(3000,dentSaved+ds);
+    const net=inc-fx-varM-ppPay-amPay-dent;
+    if(paypal<=0&&!ppFree)ppFree=idx+1;
+    if(amazon<=0&&!amFree)amFree=idx+1;
+    if(dentSaved>=3000&&!dentM)dentM=idx+1;
+    if(paypal/ppLim<=0.3&&!pp30)pp30=idx+1;
+    if(amazon/amLim<=0.3&&!am30)am30=idx+1;
+    const nc=net>0?'pos':net>-500?'warn':'neg';
+    rows+=`<tr><td class="month">${months[idx]}</td><td class="pos">$${Math.round(inc).toLocaleString()}</td><td class="neg">$${Math.round(fx).toLocaleString()}</td><td class="neg">$${Math.round(varM).toLocaleString()}</td><td class="neg">$${Math.round(ppPay+amPay).toLocaleString()}</td><td style="color:var(--blue)">$${Math.round(dent).toLocaleString()}</td><td class="${nc}">${net>=0?'+':'-'}$${Math.abs(Math.round(net)).toLocaleString()}</td><td class="${paypal/ppLim>0.3?'neg':'pos'}">$${Math.round(paypal).toLocaleString()}</td><td class="${amazon/amLim>0.3?'neg':'pos'}">$${Math.round(amazon).toLocaleString()}</td></tr>`;
+  }
+  document.getElementById('projTable').innerHTML=rows;
+  const mn=['Apr','May','Jun','Jul','Aug','Sep'];
+  document.getElementById('r1').textContent=ppFree?mn[ppFree-1]+" '26":'6mo+';
+  document.getElementById('r2').textContent=amFree?mn[amFree-1]+" '26":'6mo+';
+  document.getElementById('r3').textContent=dentM?mn[dentM-1]+" '26":'6mo+';
+  document.getElementById('r4').textContent=pp30?mn[pp30-1]+" '26":'6mo+';
+  document.getElementById('r5').textContent=am30?mn[am30-1]+" '26":'6mo+';
+}
 </script>
 </body>
 </html>
-<script>
-const WEEKLY_BUDGET = 650;
-let weeklySpent = 0;
-
-function updateWeekly(val) {
-  weeklySpent = Math.max(0, parseFloat(val)||0);
-  const pct = Math.min(100, (weeklySpent/WEEKLY_BUDGET)*100);
-  const left = WEEKLY_BUDGET - weeklySpent;
-  const color = pct > 90 ? "var(--red)" : pct > 70 ? "var(--amber)" : "var(--green)";
-  document.getElementById("weeklySpend").textContent = "$"+weeklySpent.toFixed(0);
-  document.getElementById("weeklySpend").style.color = color;
-  document.getElementById("weeklyBar").style.width = pct+"%";
-  document.getElementById("weeklyBar").style.background = color;
-  const day = new Date().getDay();
-  const ctx = day===5 ? "Friday — this is your weekend budget" : day===6||day===0 ? "weekend — track carefully" : (6-day)+" days left in week";
-  document.getElementById("weeklyLeft").textContent = left >= 0
-    ? "$"+left.toFixed(0)+" remaining — "+ctx
-    : "⚠️ OVER BUDGET by $"+Math.abs(left).toFixed(0);
-}
-</script>
